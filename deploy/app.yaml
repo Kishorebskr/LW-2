@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lamp-svc
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lamp-svc
+  template:
+    metadata:
+      labels:
+        app: lamp-svc
+    spec:
+      containers:
+      - name: lamp-svc
+        image: lamp-svc:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 50m
+          limits:
+            memory: 128Mi
+            cpu: 200m
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          initialDelaySeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          initialDelaySeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lamp-svc
+spec:
+  selector:
+    app: lamp-svc
+  ports:
+  - port: 80
+    targetPort: 8000
+  type: NodePort

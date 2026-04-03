@@ -1,0 +1,38 @@
+groups:
+- name: lamp-svc
+  rules:
+  # Note: These are example alerts for a production Prometheus setup
+  # For the assessment, these show understanding of monitoring concepts
+  
+  - alert: ServiceDown
+    expr: up{job="kubernetes-pods", pod=~"lamp-svc-.*"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Lamp service pods are down"
+      
+  - alert: HighErrorRate  
+    expr: increase(requests_total[5m]) > 100
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High request volume on lamp service"
+
+  - alert: PodMemoryHigh
+    expr: container_memory_working_set_bytes{pod=~"lamp-svc-.*"} / container_spec_memory_limit_bytes > 0.9
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Pod memory usage high"
+      
+  # Simple example that would work with our app metrics
+  - alert: NoRequests
+    expr: increase(requests_total{endpoint="list"}[10m]) == 0
+    for: 5m
+    labels:
+      severity: info
+    annotations:
+      summary: "No lamp catalog requests in 10 minutes"

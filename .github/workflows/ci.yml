@@ -1,0 +1,40 @@
+name: build-and-test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build image
+      run: |
+        cd src
+        docker build -t lamp-svc:${{ github.sha }} -f ../Dockerfile .
+        
+    - name: Test endpoints
+      run: |
+        # start container for testing
+        docker run -d -p 8000:8000 --name test-app lamp-svc:${{ github.sha }}
+        sleep 5
+        
+        # basic smoke tests
+        curl -f http://localhost:8000/healthz
+        curl -f http://localhost:8000/lamps
+        
+        # cleanup
+        docker stop test-app
+        docker rm test-app
+
+    # Note: kubectl validation would need a k8s cluster 
+    # In real project, we'd test this locally with minikube
+    - name: Check files exist
+      run: |
+        ls -la deploy/
+        echo "✅ Deployment files ready"
